@@ -10,3 +10,5 @@ dist
 
 # Local screenshots taken while checking the page
 artifacts/
+.vercel
+.env*
