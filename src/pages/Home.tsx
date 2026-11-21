@@ -1,224 +1,361 @@
-import { ArrowRight } from 'lucide-react'
-import { motion } from 'motion/react'
-import { useState } from 'react'
+import { ArrowUpRight, Globe, Star } from 'lucide-react'
+import { useEffect } from 'react'
 
-import { ArrowLink, Photo, Reveal, Stat, Title } from '../components/Bits'
-import { ButtonLink } from '../components/Button'
-import { Card } from '../components/Card'
-import { Marquee, TestimonialSlider } from '../components/Content'
-import { Holo } from '../components/Holo'
+import { GithubIcon, Reveal } from '../components/Bits'
 import { Nav } from '../components/Nav'
-import { ProjectCard } from '../components/ProjectCard'
-import { ServiceCard } from '../components/ServiceCard'
-import { APPROACH, CLIENTS, HOME, PROJECTS, SERVICES, TESTIMONIALS } from '../data'
+import { SkinStage } from '../components/SkinStage'
+import { ABOUT, CREW, LINKS, PROGRAMS, SITE, SKIN, TEAM, type Program } from '../data'
 import { cx } from '../lib/cx'
-import { useDocumentTitle } from '../lib/storage'
 
-const EASE = [0.22, 1, 0.36, 1] as const
+/**
+ * The repositories ride an ellipse around the crew: two on each side, one at
+ * each end. `connector` draws the dot line back toward the centre.
+ */
+const FLOATS: Array<{
+  name: string
+  position: string
+  connector: 'left' | 'right' | null
+  delay: number
+}> = [
+  { name: 'Vulkan-map', position: 'left-0 top-[25%]', connector: 'left', delay: 0 },
+  { name: 'voice-text-translator-for-minecraft', position: 'right-0 top-[25%]', connector: 'right', delay: 0.8 },
+  { name: 'Vulkan-map2', position: 'left-[calc(29%_-_103px)] top-0', connector: null, delay: 1.5 },
+  { name: 'AURA-Finale', position: 'left-[calc(71%_-_103px)] top-0', connector: null, delay: 2.2 },
+  { name: 'game-of-life', position: 'left-0 top-[61%]', connector: 'left', delay: 0.4 },
+  { name: 'Mathlib', position: 'right-0 top-[61%]', connector: 'right', delay: 1.1 },
+  { name: 'sitoalmanacco', position: 'left-[calc(29%_-_103px)] bottom-0', connector: null, delay: 1.9 },
+  { name: 'GradeProgettoAurificato', position: 'left-[calc(71%_-_103px)] bottom-0', connector: null, delay: 0.6 },
+]
+
+/** One colour per language, used by the dots and the floating cards. */
+const langDot: Record<Program['language'], string> = {
+  Java: 'bg-violet shadow-[0_0_10px_rgba(160,107,255,0.85)]',
+  'C++': 'bg-pink shadow-[0_0_10px_rgba(255,122,217,0.85)]',
+  HTML: 'bg-cyan shadow-[0_0_10px_rgba(110,231,255,0.85)]',
+}
+
+const langText: Record<Program['language'], string> = {
+  Java: 'text-violet-light',
+  'C++': 'text-pink',
+  HTML: 'text-cyan',
+}
+
+function FloatCard({
+  program,
+  position,
+  connector,
+  delay,
+}: {
+  program: Program
+  position: string
+  connector: 'left' | 'right' | null
+  delay: number
+}) {
+  return (
+    <li
+      className={cx('group pointer-events-auto absolute w-[206px]', position)}
+      style={{ animation: 'float 9s ease-in-out infinite', animationDelay: `${delay}s` }}
+    >
+      <a
+        href={program.href}
+        target="_blank"
+        rel="noreferrer"
+        className="relative block rounded-[var(--radius-card-sm)] border border-line bg-night/75 p-3.5 backdrop-blur-md transition-[border-color,background-color,box-shadow] duration-[var(--duration-base)] short-laptop:p-2.5 hov:border-violet/60 hov:bg-night/90 hov:shadow-[var(--shadow-float)]"
+      >
+        <span className="flex items-center gap-2">
+          <span className={cx('size-2 shrink-0 rounded-full', langDot[program.language])} aria-hidden />
+          <span className={cx('caps', langText[program.language])}>{program.language}</span>
+          {program.stars > 0 && (
+            <span className="ml-auto inline-flex items-center gap-1 text-[10px] text-faint">
+              <Star className="size-2.5" aria-hidden />
+              {program.stars}
+            </span>
+          )}
+        </span>
+        <span
+          title={program.name}
+          className="mt-2 line-clamp-2 text-[12.5px] leading-snug font-medium break-words text-ink transition-colors short-laptop:mt-1.5 short-laptop:text-[12px] group-hov:text-violet-light"
+        >
+          {program.name}
+        </span>
+
+        {connector && (
+          <>
+            <span
+              aria-hidden
+              className={cx(
+                'absolute top-1/2 h-px w-12 bg-gradient-to-r from-violet/45 to-transparent',
+                connector === 'left' ? '-right-12' : '-left-12 rotate-180',
+              )}
+            />
+            <span
+              aria-hidden
+              className={cx(
+                'absolute top-1/2 size-1.5 -translate-y-1/2 rounded-full border border-violet/60 bg-violet/40',
+                connector === 'left' ? '-right-[3.1rem]' : '-left-[3.1rem]',
+              )}
+            />
+          </>
+        )}
+      </a>
+    </li>
+  )
+}
+
+function Stage() {
+  const floats = FLOATS.map((f) => ({
+    ...f,
+    program: PROGRAMS.find((p) => p.name === f.name),
+  })).filter((f): f is (typeof FLOATS)[number] & { program: Program } => Boolean(f.program))
+
+  return (
+    <div className="mx-auto mt-6 flex min-h-[190px] w-full max-w-[1040px] flex-1 flex-col short-laptop:mt-3.5">
+      <div className="relative min-h-0 flex-1">
+      {/* Spotlight and floor */}
+      <div
+        aria-hidden
+        className="absolute top-0 left-1/2 h-[88%] w-[min(90%,620px)] -translate-x-1/2 bg-[radial-gradient(ellipse_at_top,rgba(160,107,255,0.26),transparent_66%)]"
+      />
+      <div aria-hidden className="absolute bottom-5 left-1/2 h-24 w-[min(80%,440px)] -translate-x-1/2">
+        <div className="absolute inset-0 rounded-[50%] bg-violet/25 blur-2xl" />
+        <div className="absolute inset-x-0 bottom-1/2 h-px bg-gradient-to-r from-transparent via-violet-light/60 to-transparent" />
+        <div className="absolute inset-x-[14%] bottom-[34%] h-14 rounded-[50%] border border-violet/35" />
+        <div className="absolute inset-x-[26%] bottom-[30%] h-10 rounded-[50%] border border-violet/20" />
+      </div>
+
+      {/* The skin */}
+      <SkinStage pauseOffscreen className="absolute inset-x-0 top-0 z-10 h-full" />
+
+      {/* Repositories riding an ellipse around the crew */}
+      <ul className="pointer-events-none absolute inset-0 z-20 hidden lg:block">
+        {floats.map((f) => (
+          <FloatCard
+            key={f.name}
+            program={f.program}
+            position={f.position}
+            connector={f.connector}
+            delay={f.delay}
+          />
+        ))}
+      </ul>
+
+      </div>
+
+      <p className="caps mt-2 text-center text-[10px] text-faint">
+        <span className="mr-1.5 inline-block size-1.5 rounded-full bg-violet align-middle" aria-hidden />
+        {SKIN.caption}
+      </p>
+    </div>
+  )
+}
 
 function Hero() {
   return (
-    <section aria-labelledby="hero-title" className="relative overflow-hidden rounded-[var(--radius-card)] bg-card px-5 pt-3 pb-6 sm:px-8 lg:pb-9">
-      <Nav />
-      <div className="relative flex flex-col lg:block lg:h-[clamp(560px,calc(100svh-262px),860px)]">
-        {/* Stats, top right */}
-        <div className="order-1 mt-8 grid grid-cols-3 gap-4 sm:mt-10 lg:absolute lg:top-[6%] lg:right-0 lg:mt-0 lg:flex lg:gap-[clamp(1.5rem,0.5rem+1.6vw,2.75rem)]">
-          {HOME.stats.map((s) => (
-            <Stat key={s.value} value={s.value} label={s.label} />
-          ))}
-        </div>
+    <section
+      id="programs"
+      className="relative flex min-h-[calc(100svh_-_1rem)] scroll-mt-3 flex-col overflow-hidden rounded-[var(--radius-card)] border border-line bg-card sm:min-h-[calc(100svh_-_1.5rem)]"
+    >
+      <div aria-hidden className="grid-bg pointer-events-none absolute inset-0 opacity-70" />
+      <div
+        aria-hidden
+        className="animate-glow pointer-events-none absolute -top-32 left-1/2 size-[34rem] -translate-x-1/2 rounded-full bg-violet/15 blur-[120px]"
+      />
 
-        {/* The chrome knot */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9, rotate: -8 }}
-          animate={{ opacity: 1, scale: 1, rotate: 0 }}
-          transition={{ duration: 1.4, ease: EASE }}
-          className="order-3 mx-auto -my-4 w-[min(92vw,480px)] lg:absolute lg:top-[3%] lg:left-[11%] lg:m-0 lg:w-[min(39vw,calc((100svh-262px)*0.86),640px)]"
-        >
-          <Holo kind="knot" motion priority />
-        </motion.div>
+      <div className="relative flex flex-1 flex-col px-3 pt-3 sm:px-5 sm:pt-4">
+        <Nav />
 
-        {/* Captions, left */}
-        <p className="caps relative z-10 order-2 mt-10 max-w-[11.5rem] lg:absolute lg:top-[40%] lg:left-0 lg:mt-0">{HOME.captionTop}</p>
-        <p className="caps relative z-10 order-5 mt-8 max-w-[14rem] self-end text-right lg:absolute lg:top-[80%] lg:left-[11%] lg:mt-0 lg:self-auto">{HOME.captionBottom}</p>
-
-        {/* Reach out + headline, bottom right */}
-        <div className="relative z-10 order-4 mt-6 flex flex-col items-end lg:absolute lg:right-0 lg:bottom-0 lg:mt-0">
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.55, ease: EASE }} className="mb-[clamp(1rem,4svh,2.6rem)]">
-            <ArrowLink to="/contact">{HOME.reachOut}</ArrowLink>
-          </motion.div>
-          <h1 id="hero-title" className="display text-right text-[clamp(3.3rem,17.2vw,6rem)] sm:text-[clamp(4rem,13vw,8rem)] lg:text-[min(10.1vw,17svh,10.6rem)]">
-            {HOME.headline.map((line, i) => (
-              <span key={line} className="block overflow-hidden pb-[0.04em]">
-                <motion.span className="block" initial={{ y: '105%' }} animate={{ y: 0 }} transition={{ duration: 1.1, delay: 0.15 + i * 0.12, ease: EASE }}>
-                  {line}
-                </motion.span>
-              </span>
-            ))}
+        <div className="relative mt-7 text-center sm:mt-9 short-laptop:mt-3.5">
+          <p className="caps mx-auto w-fit rounded-full border border-line bg-soft/60 px-3 py-1 text-[10px] text-violet-light short-laptop:hidden">
+            {PROGRAMS.length} programs · 3 languages · one person
+          </p>
+          <h1 className="display mt-4 text-[clamp(2.5rem,8.4vw,6.2rem)] short-laptop:mt-0 short-laptop:text-[clamp(2rem,3.9vw,3rem)]">
+            <span className="block short-laptop:inline">Minecraft mods.</span>{' '}
+            <span className="block text-violet-light short-laptop:inline">Made to tinker.</span>
           </h1>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function Services() {
-  const [active, setActive] = useState(1)
-  const shown = SERVICES.slice(0, 3)
-  return (
-    <section aria-labelledby="services-title" className="grid gap-2 md:grid-cols-2">
-      <Card className="flex min-h-[340px] flex-col p-6 sm:p-8 md:min-h-0">
-        <Title id="services-title" lines={HOME.servicesTitle} className="relative z-10 self-end" />
-        <div aria-hidden className="pointer-events-none absolute bottom-[-16%] left-[-6%] w-[min(78%,480px)]">
-          <Holo kind="sphere" motion />
-        </div>
-        <ArrowLink to="/services" tone="ink" size="sm" className="relative z-10 mt-auto self-end">
-          All services
-        </ArrowLink>
-      </Card>
-      <ul className="grid gap-2">
-        {shown.map((s, i) => (
-          <li key={s.slug}>
-            <ServiceCard service={s} active={active === i} onActivate={() => setActive(i)} />
-          </li>
-        ))}
-      </ul>
-    </section>
-  )
-}
-
-function Manifesto() {
-  return (
-    <Card as="section" tone="night" aria-labelledby="manifesto-title" className="grid gap-8 p-5 sm:p-8 lg:grid-cols-[1.15fr_1fr] lg:gap-10">
-      <div className="flex flex-col justify-between gap-10">
-        <Reveal>
-          <Title id="manifesto-title" lines={HOME.manifestoTitle} align="left" size="lg" />
-        </Reveal>
-        <div className="grid max-w-lg grid-cols-3 gap-4">
-          {HOME.stats.map((s) => (
-            <Stat key={s.value} value={s.value} label={s.label} align="left" tone="light" />
-          ))}
-        </div>
-      </div>
-      <div className="flex flex-col gap-6">
-        <p className="caps ml-auto max-w-[26rem] text-right text-[13px] leading-[1.2] text-white">{HOME.manifesto}</p>
-        <Photo image="nocturne" ratio="4/3" className="rounded-[var(--radius-card-sm)]" />
-      </div>
-    </Card>
-  )
-}
-
-function Approach() {
-  return (
-    <section aria-labelledby="approach-title" className="grid gap-2">
-      <Card className="grid gap-6 p-6 sm:p-8 md:grid-cols-[1fr_auto] md:items-end">
-        <p className="order-2 max-w-sm text-muted md:order-1">Four habits that shape every project, whatever its size.</p>
-        <Title id="approach-title" lines={HOME.approachTitle} className="order-1 md:order-2" />
-      </Card>
-      <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-        {APPROACH.map((a, i) => (
-          <li key={a.title} className="h-full">
-            <Reveal delay={i * 0.06} className="h-full">
-              <Card tone={a.tone} className="flex h-full min-h-[380px] flex-col p-6 sm:p-7">
-                <p className={cx('caps tabular-nums', a.tone === 'white' ? 'text-muted' : 'text-white/80')}>0{i + 1}</p>
-                <h3 className="mt-2 self-end text-right text-[clamp(1.35rem,1.05rem+0.8vw,1.75rem)] leading-[1.05] tracking-[-0.03em] uppercase">
-                  {a.title.split(' ').map((w) => (
-                    <span key={w} className="block">
-                      {w}
-                    </span>
-                  ))}
-                </h3>
-                <div className="mx-auto my-4 w-[62%] max-w-[220px]" aria-hidden>
-                  <Holo kind={a.art} />
-                </div>
-                <p className={cx('mt-auto text-[15px] leading-snug', a.tone === 'white' ? 'text-muted' : 'text-white/85')}>{a.body}</p>
-              </Card>
-            </Reveal>
-          </li>
-        ))}
-      </ul>
-    </section>
-  )
-}
-
-function Work() {
-  return (
-    <section aria-labelledby="work-title" className="grid gap-2">
-      <Card className="flex flex-wrap items-end justify-between gap-6 p-6 sm:p-8">
-        <Title id="work-title" lines={HOME.workTitle} align="left" />
-        <ArrowLink to="/work">All projects</ArrowLink>
-      </Card>
-      <div className="grid gap-2 md:grid-cols-2">
-        {PROJECTS.slice(0, 4).map((p, i) => (
-          <Reveal key={p.slug} delay={(i % 2) * 0.08}>
-            <ProjectCard project={p} size="lg" className="h-full" />
-          </Reveal>
-        ))}
-      </div>
-    </section>
-  )
-}
-
-function Testimony() {
-  return (
-    <section id="testimony" aria-labelledby="testimony-title" className="grid scroll-mt-4 gap-2 lg:grid-cols-[1fr_1.45fr]">
-      <Card className="flex min-h-[320px] flex-col justify-between gap-8 p-6 sm:p-8">
-        <Title id="testimony-title" lines={HOME.testimonyTitle} align="left" />
-        <div className="flex items-end justify-between gap-6">
-          <div className="w-28" aria-hidden>
-            <Holo kind="star" motion />
-          </div>
-          <p className="max-w-[16rem] text-right text-muted">
-            <span className="block text-4xl font-normal tracking-[-0.05em] text-ink">4.9 / 5</span>
-            Average client rating across 140 projects since 2015.
+          <p className="mx-auto mt-3.5 max-w-md text-balance text-[15px] leading-relaxed text-muted short-laptop:mt-2 short-laptop:text-[14px]">
+            Everything I have built, hanging around the skin. Click a card to open its repository.
           </p>
         </div>
-      </Card>
-      <Card tone="violet" className="p-6 sm:p-10">
-        <TestimonialSlider items={TESTIMONIALS} />
-      </Card>
+
+        <Stage />
+      </div>
+
+      {/* The strip of every program, like the reference's bottom row */}
+      <div className="relative z-10 border-t border-line bg-night/40 px-3 py-2.5 sm:px-5">
+        <ul className="flex gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {PROGRAMS.map((p) => (
+            <li key={p.name}>
+              <a
+                href={p.href}
+                target="_blank"
+                rel="noreferrer"
+                className="caps inline-flex h-9 items-center gap-2 rounded-full border border-line bg-soft/60 px-3 text-[10px] whitespace-nowrap text-muted transition-colors hov:border-violet/60 hov:text-ink"
+              >
+                <span className={cx('size-2 rounded-full', langDot[p.language])} aria-hidden />
+                {p.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   )
 }
 
-function Clients() {
+function Links() {
   return (
-    <Card as="section" aria-label={HOME.clientsLabel} className="px-6 py-8 sm:px-8">
-      <p className="caps mb-5 text-muted">{HOME.clientsLabel}</p>
-      <Marquee items={CLIENTS} />
-    </Card>
+    <section id="links" aria-labelledby="links-title" className="scroll-mt-3 px-2 sm:px-3">
+      <div className="rounded-[var(--radius-card)] border border-line bg-card px-4 py-7 sm:px-7 sm:py-9">
+        <p className="caps text-violet">01 — links</p>
+        <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
+          <h2 id="links-title" className="display text-[clamp(2.2rem,6vw,4rem)]">
+            Find me here.
+          </h2>
+          <span className="caps text-faint">All external</span>
+        </div>
+
+        <ul className="mt-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {LINKS.map((link, i) => {
+            const Icon = link.kind === 'github' ? GithubIcon : Globe
+            return (
+              <li key={link.label}>
+                <Reveal delay={i * 0.05} className="h-full">
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="group flex h-full flex-col rounded-[var(--radius-card-sm)] border border-line bg-soft/60 p-4 transition-[border-color,background-color,transform] duration-[var(--duration-base)] hov:-translate-y-0.5 hov:border-violet/50 hov:bg-soft"
+                  >
+                    <span className="flex items-center justify-between">
+                      <span className="inline-flex size-9 items-center justify-center rounded-[var(--radius-xs)] border border-line-strong bg-card text-violet-light">
+                        <Icon className="size-4" />
+                      </span>
+                      <ArrowUpRight
+                        className="size-4 text-violet-light transition-transform duration-[var(--duration-base)] group-hov:-translate-y-0.5 group-hov:translate-x-0.5"
+                        aria-hidden
+                      />
+                    </span>
+                    <span className="mt-4 text-[15px] font-medium text-ink group-hov:text-violet-light">{link.label}</span>
+                    <span className="mono mt-0.5 truncate text-[11px] text-violet-light/80">{link.handle}</span>
+                    <span className="mt-2 text-sm leading-relaxed text-muted">{link.note}</span>
+                  </a>
+                </Reveal>
+              </li>
+            )
+          })}
+        </ul>
+      </div>
+    </section>
   )
 }
 
-function Cta() {
+function About() {
   return (
-    <Card as="section" aria-labelledby="cta-title" className="grid gap-8 p-6 sm:p-8 md:grid-cols-[auto_1fr] md:items-end">
-      <div className="mx-auto w-[min(70vw,340px)] md:mx-0" aria-hidden>
-        <Holo kind="cloud" motion />
+    <section id="about" aria-labelledby="about-title" className="scroll-mt-3 px-2 sm:px-3">
+      <div className="grid gap-2 lg:grid-cols-[1.45fr_1fr]">
+        <div className="rounded-[var(--radius-card)] border border-line bg-card px-4 py-7 sm:px-7 sm:py-9">
+          <p className="caps text-violet">02 — about</p>
+          <h2 id="about-title" className="display mt-3 text-[clamp(2rem,5.4vw,3.4rem)]">
+            {ABOUT.title.map((line) => (
+              <span key={line} className="block">
+                {line}
+              </span>
+            ))}
+          </h2>
+          <div className="mt-5 grid max-w-xl gap-4 text-[15px] leading-relaxed text-muted">
+            {ABOUT.paragraphs.map((p) => (
+              <p key={p.slice(0, 24)}>{p}</p>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-[var(--radius-card)] border border-line bg-card px-4 py-7 sm:px-7 sm:py-9">
+          <p className="caps text-violet">At a glance</p>
+          <dl className="mt-5 divide-y divide-line">
+            {ABOUT.facts.map((f) => (
+              <div key={f.term} className="flex items-baseline justify-between gap-4 py-3">
+                <dt className="caps text-faint">{f.term}</dt>
+                <dd className="text-right text-sm text-ink-2">{f.value}</dd>
+              </div>
+            ))}
+          </dl>
+          <a
+            href={SITE.github}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-5 inline-flex h-11 items-center gap-2 rounded-full border border-line-strong px-5 text-sm font-medium text-ink transition-colors hov:border-violet hov:bg-violet hov:text-white"
+          >
+            <GithubIcon className="size-4" />
+            Browse the source
+            <ArrowUpRight className="size-4" aria-hidden />
+          </a>
+        </div>
       </div>
-      <div className="flex flex-col items-end gap-6 text-right">
-        <Title id="cta-title" lines={HOME.cta.title} size="lg" />
-        <p className="max-w-md text-muted">{HOME.cta.body}</p>
-        <ButtonLink to="/contact" variant="violet" size="lg" iconRight={<ArrowRight className="size-5" />}>
-          {HOME.cta.action}
-        </ButtonLink>
+    </section>
+  )
+}
+
+function Team() {
+  return (
+    <section id="gruppo" aria-labelledby="gruppo-title" className="scroll-mt-3 px-2 sm:px-3">
+      <div className="rounded-[var(--radius-card)] border border-line bg-card px-4 py-7 sm:px-7 sm:py-9">
+        <p className="caps text-violet">03 — the crew</p>
+        <div className="mt-3 flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
+          <div>
+            <h2 id="gruppo-title" className="display text-[clamp(2.2rem,6vw,4rem)]">
+              Tuff Gruppo.
+            </h2>
+            <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-muted">
+              Everyone in the group, in skin form.
+            </p>
+          </div>
+          <a
+            href={CREW.href}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-line-strong px-4 text-sm font-medium text-ink transition-colors duration-[var(--duration-base)] hov:border-violet hov:bg-violet hov:text-white"
+          >
+            <GithubIcon className="size-4" />
+            {CREW.name} on GitHub
+            <ArrowUpRight className="size-4" aria-hidden />
+          </a>
+        </div>
+
+        <ul className="mt-6 grid grid-cols-2 gap-2.5 lg:mx-auto lg:max-w-[660px] lg:grid-cols-4 lg:gap-3">
+          {TEAM.map((member) => (
+            <li
+              key={member.ign}
+              className="flex items-center gap-3 rounded-[var(--radius-card-sm)] border border-line bg-night/50 px-3 py-3"
+            >
+              <img
+                src={member.render}
+                alt={`${member.name}'s Minecraft skin`}
+                className="h-16 w-auto shrink-0 drop-shadow-[0_8px_18px_rgba(0,0,0,0.55)]"
+                draggable={false}
+              />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-ink">{member.name}</p>
+                <p className="mono truncate text-[11px] text-violet-light/80">@{member.ign}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
-    </Card>
+    </section>
   )
 }
 
 export function Home() {
-  useDocumentTitle()
+  useEffect(() => {
+    document.title = 'lozampy — Minecraft mods & tools'
+  }, [])
+
   return (
-    <div className="grid gap-2 p-2">
+    <div className="grid gap-2 p-2 sm:p-3">
       <Hero />
-      <Services />
-      <Manifesto />
-      <Approach />
-      <Work />
-      <Testimony />
-      <Clients />
-      <Cta />
+      <Links />
+      <About />
+      <Team />
     </div>
   )
 }

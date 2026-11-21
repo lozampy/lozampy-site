@@ -1,139 +1,69 @@
-import { ArrowRight } from 'lucide-react'
-import { useId, useState, type FormEvent } from 'react'
-import { Link } from 'react-router'
+import { ArrowUpRight } from 'lucide-react'
 
-import { FOOTER, MENU, SITE } from '../data'
-import { postJson } from '../lib/api'
-import { cx } from '../lib/cx'
-import { validateSubscribe } from '../shared/validation'
+import { FOOTER, NAV, SITE } from '../data'
 import { Logo } from './Bits'
-import { IconButton } from './Button'
-import { Card } from './Card'
-
-/** Email signup posting to /api/subscribe. */
-export function NewsletterForm({ tone = 'night' }: { tone?: 'night' | 'white' }) {
-  const [email, setEmail] = useState('')
-  const [error, setError] = useState('')
-  const [state, setState] = useState<'idle' | 'loading' | 'done'>('idle')
-  const uid = useId()
-  const onSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    const errors = validateSubscribe({ email })
-    if (errors.email) return setError(errors.email)
-    setError('')
-    setState('loading')
-    const res = await postJson('/api/subscribe', { email })
-    if (!res.ok) {
-      setState('idle')
-      return setError(res.fieldErrors?.email ?? res.error)
-    }
-    setState('done')
-  }
-  const dark = tone === 'night'
-  if (state === 'done')
-    return (
-      <p role="status" className={cx('flex h-14 items-center text-[15px]', dark ? 'text-violet-light' : 'text-violet')}>
-        Thanks. The next studio notes land in your inbox next month.
-      </p>
-    )
-  return (
-    <form onSubmit={onSubmit} noValidate>
-      <label htmlFor={uid} className="sr-only">
-        Email address
-      </label>
-      <div
-        className={cx(
-          'round flex h-14 items-center gap-2 rounded-full border pr-1.5 pl-5 transition-colors has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-3',
-          dark ? 'border-white/25 bg-white/6 has-[input:focus-visible]:outline-white' : 'border-line-strong bg-card has-[input:focus-visible]:outline-violet',
-          error && 'border-danger',
-        )}
-      >
-        <input
-          id={uid}
-          type="email"
-          autoComplete="email"
-          placeholder="you@company.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          aria-invalid={error ? true : undefined}
-          aria-describedby={error ? `${uid}-error` : undefined}
-          className={cx('h-full min-w-0 flex-1 bg-transparent text-[15px] outline-none focus-visible:outline-none', dark ? 'placeholder:text-night-muted' : 'placeholder:text-muted')}
-        />
-        <IconButton type="submit" aria-label="Subscribe" tone="violet" disabled={state === 'loading'} aria-busy={state === 'loading' || undefined}>
-          <ArrowRight className={cx('size-5', state === 'loading' && 'animate-pulse')} />
-        </IconButton>
-      </div>
-      {error && (
-        <p id={`${uid}-error`} role="alert" className={cx('mt-2 pl-5 text-[13px]', dark ? 'text-[#ff9a9f]' : 'text-danger')}>
-          {error}
-        </p>
-      )}
-    </form>
-  )
-}
 
 export function Footer() {
   return (
-    <footer className="px-2 pb-2">
-      <Card tone="night" className="px-5 pt-10 pb-6 sm:px-8 sm:pt-14">
-        <div className="grid gap-12 lg:grid-cols-[1.2fr_1fr_1fr]">
+    <footer className="px-2 pb-2 sm:px-3 sm:pb-3">
+      <div className="relative overflow-hidden rounded-[var(--radius-card)] border border-line bg-card px-5 pt-9 sm:px-8 sm:pt-12">
+        <div className="grid gap-9 sm:grid-cols-[1.3fr_auto]">
           <div className="max-w-md">
-            <p className="display text-[clamp(1.8rem,1.4rem+1.2vw,2.6rem)] leading-[0.95]">{FOOTER.newsletter.title}</p>
-            <p className="mt-3 mb-6 text-night-muted">{FOOTER.newsletter.body}</p>
-            <NewsletterForm />
+            <Logo />
+            <p className="mt-4 text-[15px] leading-relaxed text-muted">{FOOTER.note}</p>
           </div>
-          <nav aria-label="Footer">
-            <p className="caps mb-3 text-night-muted">Explore</p>
-            <ul className="grid grid-cols-2 gap-x-6">
-              {[...MENU, { label: 'Style guide', to: '/styleguide' }].map((m) => (
-                <li key={m.to}>
-                  <Link to={m.to} className="inline-flex min-h-10 items-center text-white transition-colors hov:text-violet-light">
-                    {m.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-          <div className="grid grid-cols-2 gap-6 lg:grid-cols-1">
-            <address className="text-night-muted not-italic">
-              <p className="caps mb-3">Studio</p>
-              {SITE.address.map((l) => (
-                <span key={l} className="block text-white">
-                  {l}
-                </span>
-              ))}
-              <span className="mt-2 block text-sm">{SITE.hours}</span>
-            </address>
-            <div>
-              <p className="caps mb-3 text-night-muted">Contact</p>
-              <a href={`mailto:${SITE.email}`} className="inline-flex min-h-10 items-center break-all text-white hov:text-violet-light">
-                {SITE.email}
-              </a>
-              <ul className="flex flex-wrap gap-x-4">
-                {SITE.socials.map((s) => (
-                  <li key={s.label}>
-                    <a href={s.href} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center text-white hov:text-violet-light">
-                      {s.label}
+
+          <div className="flex flex-wrap gap-x-12 gap-y-6">
+            <nav aria-label="Footer">
+              <p className="caps mb-2 text-faint">Sections</p>
+              <ul>
+                {NAV.map((item) => (
+                  <li key={item.to}>
+                    <a href={item.to} className="inline-flex min-h-10 items-center text-sm text-ink-2 hov:text-violet-light">
+                      {item.label}
                     </a>
                   </li>
                 ))}
               </ul>
+            </nav>
+            <div>
+              <p className="caps mb-2 text-faint">Elsewhere</p>
+              <ul>
+                <li>
+                  <a
+                    href={SITE.github}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex min-h-10 items-center gap-1 text-sm text-ink-2 hov:text-violet-light"
+                  >
+                    GitHub
+                    <ArrowUpRight className="size-3.5" aria-hidden />
+                  </a>
+                </li>
+                <li>
+                  <a href="#links" className="inline-flex min-h-10 items-center text-sm text-ink-2 hov:text-violet-light">
+                    All links
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
-        <p aria-hidden className="display mt-16 -mb-[0.12em] text-center text-[clamp(4.5rem,-0.5rem+19.4vw,21rem)] leading-[0.8] tracking-[-0.07em] text-white select-none">
-          Lastwerk
+
+        <p
+          aria-hidden
+          className="display mt-12 -mb-[0.1em] bg-gradient-to-b from-violet/50 to-violet/0 bg-clip-text text-center text-[clamp(3.6rem,-0.5rem+18vw,15rem)] text-transparent select-none"
+        >
+          𝙻𝚘𝚉𝚊𝚖𝚙𝚢
         </p>
-        <div className="mt-6 flex flex-col items-start justify-between gap-3 border-t border-white/12 pt-5 text-sm text-night-muted sm:flex-row sm:items-center">
-          <span className="flex items-center gap-2">
-            <Logo light className="[&_svg]:size-6" />
-            {FOOTER.legal}
-          </span>
-          <a href="#top" className="inline-flex min-h-10 items-center text-white hov:text-violet-light">
+
+        <div className="mt-5 flex flex-col items-start justify-between gap-2 border-t border-line py-4 text-xs text-faint sm:flex-row sm:items-center">
+          <span>{FOOTER.legal} · Built with React, Vite &amp; a purple skin</span>
+          <a href="#top" className="inline-flex min-h-9 items-center text-ink-2 hov:text-violet-light">
             Back to top
           </a>
         </div>
-      </Card>
+      </div>
     </footer>
   )
 }

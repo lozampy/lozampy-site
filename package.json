@@ -15,7 +15,8 @@
     "motion": "^14.4.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-router": "^8.5.0"
+    "react-router": "^8.5.0",
+    "skinview3d": "^3.4.2"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.64.0",

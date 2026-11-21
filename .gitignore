@@ -6,3 +6,7 @@ dist
 !.dev.vars.example
 .DS_Store
 *.log
+/freebuff-sites-build/
+
+# Local screenshots taken while checking the page
+artifacts/

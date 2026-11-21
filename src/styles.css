@@ -1,85 +1,72 @@
 @import 'tailwindcss';
 
 /*
-  Lastwerk design tokens. The page is a pale grey canvas holding white panels
-  ("cards") with big radii, set in one tight grotesk. Violet is the only
-  colour; the iridescent artwork (src/components/Holo.tsx) carries the rest.
-  Everything rounded is a squircle; true circles opt out with .round.
+  lozampy's skin: near-black violet canvas, slightly raised indigo panels,
+  one acid violet accent plus a little pink and cyan for the glow. Display
+  type is tight Inter Tight, labels are monospaced. Small radii, hairline
+  borders, a faint pixel grid behind the hero.
 */
 @theme {
   --font-sans: 'Inter Tight', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --color-canvas: #e9e9ec;
-  --color-card: #ffffff;
-  --color-soft: #f3f3f5;
-  --color-line: #e3e3e8;
-  --color-line-strong: #c9c9d1;
-  --color-ink: #0b0b0c;
-  --color-ink-2: #26262b;
-  --color-muted: #5c5c66;
-  --color-faint: #9b9ba5;
-  --color-night: #050505;
-  --color-night-2: #151517;
-  --color-night-muted: #a6a6b0;
-  --color-violet: #5b14f5;
-  --color-violet-deep: #4207c4;
-  --color-violet-soft: #ede6ff;
-  --color-violet-light: #b9a2ff;
-  --color-pink: #ff8ad8;
-  --color-cyan: #74e3ff;
-  --color-success: #13764a;
-  --color-danger: #c0262d;
-  --color-scrim: #0b0b0c;
+  --color-canvas: #07040e;
+  --color-card: #0e0919;
+  --color-soft: #150d26;
+  --color-line: #231737;
+  --color-line-strong: #3a2755;
+  --color-ink: #f4efff;
+  --color-ink-2: #d8cdef;
+  --color-muted: #9a8cb6;
+  --color-faint: #6b5d85;
+  --color-night: #05030a;
+  --color-night-2: #0a0614;
+  --color-night-muted: #a392c1;
+  --color-violet: #a06bff;
+  --color-violet-deep: #7f45ff;
+  --color-violet-soft: #221540;
+  --color-violet-light: #cbb2ff;
+  --color-pink: #ff7ad9;
+  --color-cyan: #6ee7ff;
+  --color-success: #4fe3a1;
+  --color-danger: #ff5d7a;
+  --color-scrim: #05030a;
 
-  --radius-xs: 10px;
-  --radius-control: 16px;
-  --radius-card-sm: 22px;
-  --radius-card: 30px;
+  --radius-xs: 6px;
+  --radius-control: 10px;
+  --radius-card-sm: 12px;
+  --radius-card: 16px;
 
-  --shadow-card: 0 1px 0 rgb(255 255 255 / 0.9) inset, 0 24px 48px -32px rgb(20 10 60 / 0.18);
-  --shadow-float: 0 30px 80px -24px rgb(16 6 50 / 0.35);
-  --shadow-violet: 0 24px 60px -24px rgb(91 20 245 / 0.65);
-  --shadow-focus: 0 0 0 3px rgb(91 20 245 / 0.28);
+  --shadow-card: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 30px 60px -40px rgb(0 0 0 / 0.9);
+  --shadow-float: 0 40px 90px -30px rgb(0 0 0 / 0.85);
+  --shadow-violet: 0 0 60px -12px rgb(160 107 255 / 0.7);
+  --shadow-focus: 0 0 0 3px rgb(160 107 255 / 0.32);
 
-  --duration-fast: 160ms;
-  --duration-base: 320ms;
-  --duration-slow: 700ms;
-  --duration-hero: 1100ms;
+  --duration-fast: 150ms;
+  --duration-base: 300ms;
+  --duration-slow: 650ms;
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
 
-  --animate-spin-slow: spin-slow 60s linear infinite;
-  --animate-float: float 8s ease-in-out infinite;
+  --animate-float: float 9s ease-in-out infinite;
+  --animate-glow: glow 7s ease-in-out infinite alternate;
   --animate-marquee: marquee 38s linear infinite;
-  --animate-shimmer: shimmer 1.6s linear infinite;
-  --animate-hue: hue 14s ease-in-out infinite alternate;
 
-  @keyframes spin-slow {
-    to { transform: rotate(360deg); }
-  }
   @keyframes float {
-    0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
-    50% { transform: translate3d(0, -14px, 0) rotate(2deg); }
+    0%, 100% { transform: translate3d(0, 0, 0); }
+    50% { transform: translate3d(0, -12px, 0); }
+  }
+  @keyframes glow {
+    from { opacity: 0.55; transform: scale(1); }
+    to { opacity: 0.9; transform: scale(1.08); }
   }
   @keyframes marquee {
     from { transform: translateX(0); }
     to { transform: translateX(-50%); }
   }
-  @keyframes shimmer {
-    from { background-position: -200% 0; }
-    to { background-position: 200% 0; }
-  }
-  @keyframes hue {
-    from { filter: hue-rotate(-10deg) saturate(1); }
-    to { filter: hue-rotate(18deg) saturate(1.15); }
-  }
 }
 
-/*
-  State variants that the style guide can pin: `hov:`, `prs:` and `fv:` match
-  the real :hover / :active / :focus-visible, and also an element carrying
-  data-force="hover" (or pressed, focus). `group-hov:` follows a .group parent.
-*/
+/* Real hover / active / focus-visible states, plus data-force for pinning them. */
 @custom-variant hov {
   @media (hover: hover) {
     &:hover {
@@ -106,6 +93,13 @@
     @slot;
   }
 }
+/* Short laptop windows: the hero trades its poster type for room to see the
+   whole skin. Only wide screens, so phones keep the full-size headline. */
+@custom-variant short-laptop {
+  @media (max-height: 820px) and (min-width: 1024px) {
+    @slot;
+  }
+}
 @custom-variant group-hov {
   @media (hover: hover) {
     :where(.group):hover & {
@@ -118,31 +112,27 @@
   :where(.group)[data-force~='hover'] & {
     @slot;
   }
-  :where(.group)[data-active='true'] & {
-    @slot;
-  }
 }
 
 @layer base {
   *,
   *::before,
   *::after {
-    corner-shape: squircle;
     border-color: var(--color-line);
-  }
-  .round,
-  .round::before,
-  .round::after {
-    corner-shape: round;
   }
   html {
     background: var(--color-canvas);
-    color-scheme: light;
+    color-scheme: dark;
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
   }
   body {
-    background: var(--color-canvas);
+    background-color: var(--color-canvas);
+    background-image:
+      radial-gradient(62rem 42rem at 12% -12%, rgb(127 69 255 / 0.18), transparent 70%),
+      radial-gradient(48rem 34rem at 92% -4%, rgb(255 122 217 / 0.09), transparent 70%),
+      radial-gradient(60rem 40rem at 60% 110%, rgb(110 231 255 / 0.05), transparent 70%);
+    background-attachment: fixed;
     color: var(--color-ink);
     font-family: var(--font-sans);
     font-size: 16px;
@@ -160,23 +150,16 @@
     letter-spacing: inherit;
     color: inherit;
   }
-  button:not(:disabled),
-  [role='button'] {
+  button:not(:disabled) {
     cursor: pointer;
   }
   :focus-visible,
   [data-force~='focus'] {
-    outline: 2px solid var(--color-violet);
+    outline: 2px solid var(--color-violet-light);
     outline-offset: 3px;
   }
-  .on-dark :focus-visible,
-  .on-dark:focus-visible,
-  .on-dark[data-force~='focus'],
-  .on-dark [data-force~='focus'] {
-    outline-color: #fff;
-  }
   ::selection {
-    background: var(--color-violet);
+    background: var(--color-violet-deep);
     color: #fff;
   }
   img,
@@ -197,46 +180,51 @@
   }
 }
 
-/* Big tight display type: the reference's uppercase grotesk. */
+/* Huge tight uppercase display type. */
 @utility display {
   font-family: var(--font-sans);
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
   line-height: 0.86;
   letter-spacing: -0.055em;
 }
 
-/* Small caption caps (12px), used for labels and the captions in the hero. */
+/* Monospaced micro labels and captions. */
 @utility caps {
-  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
   font-weight: 500;
-  line-height: 1.18;
-  letter-spacing: -0.005em;
+  line-height: 1.3;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+@utility mono {
+  font-family: var(--font-mono);
 }
 
 @utility text-balance {
   text-wrap: balance;
 }
+
 @utility text-pretty {
   text-wrap: pretty;
 }
 
-/* An iridescent fill for avatars and placeholders. */
+/* The faint pixel grid behind the hero. */
+@utility grid-bg {
+  background-image:
+    linear-gradient(to right, rgb(160 107 255 / 0.09) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(160 107 255 / 0.09) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(80% 70% at 50% 30%, #000 25%, transparent 85%);
+}
+
+/* Violet gradient used on discs and the big footer wordmark. */
 @utility holo-fill {
   background:
-    radial-gradient(120% 90% at 20% 15%, #ffffff 0%, transparent 38%),
-    radial-gradient(90% 80% at 85% 25%, var(--color-cyan) 0%, transparent 55%),
-    radial-gradient(80% 90% at 30% 90%, var(--color-pink) 0%, transparent 55%),
-    linear-gradient(135deg, var(--color-violet-light), var(--color-violet) 60%, var(--color-violet-deep));
-}
-
-@utility skeleton {
-  background: linear-gradient(90deg, var(--color-soft) 0%, #e8e8ee 50%, var(--color-soft) 100%);
-  background-size: 200% 100%;
-  animation: var(--animate-shimmer);
-}
-
-.marquee-mask {
-  mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+    radial-gradient(110% 90% at 20% 12%, rgb(255 255 255 / 0.5) 0%, transparent 40%),
+    radial-gradient(90% 80% at 85% 20%, var(--color-cyan) 0%, transparent 55%),
+    radial-gradient(85% 90% at 25% 92%, var(--color-pink) 0%, transparent 55%),
+    linear-gradient(135deg, var(--color-violet-light), var(--color-violet) 55%, var(--color-violet-deep));
 }
